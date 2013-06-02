@@ -6,6 +6,5 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 
 resolvers += "Sonatype" at "https://oss.sonatype.org/content/groups/scala-tools"
 
-libraryDependencies += "com.typesafe.akka" % "akka-actor" % "2.0.5"
 
 
