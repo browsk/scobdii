@@ -1,35 +1,48 @@
 package org.browsk.obdii
 
-import jssc.{SerialPortEvent, SerialPort, SerialPortEventListener}
-import scala.collection.mutable
-import akka.actor.{ActorRef, Props, ActorSystem, Actor}
-import org.browsk.obdii.elm3xx.{SerialHandler, SerialPortEventReader, ReceiveActor}
+import jssc.SerialPort
+import akka.actor.{Props, ActorSystem}
+import org.browsk.obdii.elm3xx.SerialHandler
 import akka.util.Timeout
 import scala.concurrent.duration._
 import scala.concurrent._
 import akka.pattern.ask
-import grizzled.slf4j.Logging
 import akka.event.Logging
 import grizzled.slf4j.Logging
+import org.browsk.obdii.elm3xx.command._
+import scala.language.postfixOps
+import akka.actor.ActorDSL._
+import scala.collection.mutable
+import scala.util.matching.Regex
 
 class ELM3xx(val port : SerialPort) extends Logging {
-  val system = ActorSystem("ELM3xx")
+  implicit val system = ActorSystem("ELM3xx")
   val serialActor = system.actorOf(Props(new SerialHandler(port)), name = "serial_handler")
   val log = Logging(system, this.getClass)
   implicit val timeout = Timeout(2 seconds)
   implicit val ec = ExecutionContext.Implicits.global
 
+  var chipVersion : Option[String]  = Option.empty
+  var protocolVersion : Option[String] = Option.empty
+
 	def connect = {
 
-	  val future = serialActor ? "ATZ\r\n"
+	  val future = serialActor ? Reset
 
-    val result = Await.result(future, timeout.duration).asInstanceOf[String]
+    val result = Await.result(future, timeout.duration).asInstanceOf[Array[String]]
 
-    log.info("Connect got this : {}", result)
-	  
-	  Thread.sleep(2000)
+    val version = result.find(s => s.matches("ELM.* v.*"))
 
-	 // val p = port.readString()
-//	  println(p)
+    if (version.nonEmpty) {
+      chipVersion = new Regex("ELM\\d*") findFirstIn version.get
+      protocolVersion = new Regex("v\\d\\.\\d") findFirstIn version.get
+    }
+
+    log.info("Chip : {}", chipVersion.getOrElse("unknown"))
+    log.info("Protocol : {}", protocolVersion.getOrElse("unknown"))
+
+    serialActor.ask(new Echo(false)).mapTo[Array[String]]
+
+
 	}
 }
