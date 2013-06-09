@@ -29,19 +29,20 @@ class ELM3xx(val port : SerialPort) extends Logging {
 
 	  val future = serialActor ? Reset
 
-    val result = Await.result(future, timeout.duration).asInstanceOf[Array[String]]
+    val result = Await.result(future, timeout.duration).asInstanceOf[Traversable[String]]
 
-    val version = result.find(s => s.matches("ELM.* v.*"))
+    val regex = new Regex("(ELM\\d*) *(v\\d\\.\\d)")
+    val version = result.map(s => regex.findFirstMatchIn(s)).find(m => m.nonEmpty && m.get.matched != None).flatten
 
     if (version.nonEmpty) {
-      chipVersion = new Regex("ELM\\d*") findFirstIn version.get
-      protocolVersion = new Regex("v\\d\\.\\d") findFirstIn version.get
+      chipVersion = Option(version.get.group(1))
+      protocolVersion = Option(version.get.group(2))
     }
 
     log.info("Chip : {}", chipVersion.getOrElse("unknown"))
     log.info("Protocol : {}", protocolVersion.getOrElse("unknown"))
 
-    serialActor.ask(new Echo(false)).mapTo[Array[String]]
+    serialActor.ask(Echo(false)).mapTo[Array[String]]
 
 
 	}
