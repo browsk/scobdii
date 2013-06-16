@@ -1,11 +1,10 @@
 package org.browsk.obdii
 
-class ParameterId(val mode:Byte, val pid: Short, val bytes:Byte, val description:String) {
-  def equals(that: ParameterId) : Boolean =
-    mode == that.mode && pid == that.pid
+trait ParameterId {
+  def mode : Mode
+  def pid: Int
+  def description: String
 }
 
-case class SupportedPIDs() extends ParameterId(1, 0, 4, "PIDs supported") {
+case class SupportedPIDs(val mode: Mode = ShowCurrent, val pid : Int = 0, val description : String = "PIDs supported") {
 }
-
-//class Parameter

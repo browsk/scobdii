@@ -1,4 +1,4 @@
-package org.browsk.obdii
+package org.browsk.obdii.elm3xx
 
 object ELM3xxMessage {
 

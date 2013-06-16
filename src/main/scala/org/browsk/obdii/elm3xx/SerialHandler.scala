@@ -11,6 +11,7 @@ class SerialHandler(val port:SerialPort) extends Actor with ActorLogging {
 
   port.addEventListener(new SerialPortEventReader(port, self), SerialPort.MASK_RXCHAR)
 
+  var monitor = context.actorSelection("*/serial_monitor")
   var q: ActorRef = null
 
   def receive = {
@@ -24,9 +25,19 @@ class SerialHandler(val port:SerialPort) extends Actor with ActorLogging {
     }
     case c : Command => {
       log.debug("TX : {}", c.command)
+
+      monitor ! c.command
       port.writeString(c.command)
       port.writeByte(13)
       q = sender
+    }
+    case s: String => {
+      log.debug("TX : {}", s)
+
+      port.writeString(s)
+      port.writeByte(13)
+      q = sender
+
     }
   }
 }
