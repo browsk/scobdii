@@ -6,5 +6,8 @@ trait ParameterId {
   def description: String
 }
 
-case class SupportedPIDs(val mode: Mode = ShowCurrent, val pid : Int = 0, val description : String = "PIDs supported") {
+class SupportedPIDs extends ParameterId {
+  val mode = ShowCurrent
+  val pid = 0
+  val description = "PIDs supported"
 }

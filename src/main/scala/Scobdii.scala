@@ -5,6 +5,7 @@ import grizzled.slf4j.Logging
 import jssc.SerialPortList
 import jssc.SerialPort
 import org.browsk.obdii.elm3xx.{ELM3xx, SerialHandler}
+import org.browsk.obdii.{SupportedPIDs, ParameterId}
 import org.browsk.obdii.ui.{SerialMonitor, RawPane}
 import org.slf4j
 import org.slf4j._
@@ -33,11 +34,16 @@ object Scobdii extends SimpleSwingApplication with Logging {
     title = "OBD-II Interface"
 
     menuBar = new MenuBar {
-      contents += new MenuItem(Action("Connect") {
-        device.connect
-      })
-      contents += new MenuItem(Action("Query PIDs") {
-      })
+      contents += new Menu("ELM3xx") {
+        contents += new MenuItem(Action("Connect") {
+          device.connect
+        })
+        contents += new MenuItem(Action("Query PIDs") {
+          device.send(new SupportedPIDs(), {
+            result: Traversable[String] => logger.debug(result)
+          })
+        })
+      }
     }
 
 

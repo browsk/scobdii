@@ -29,7 +29,7 @@ class ELM3xx(val port : SerialPort) extends Logging {
 	}
 
   def send(pid: ParameterId, handler: Traversable[String] => Unit) : Future[Any] = {
-    send(pid.mode.toString + pid.pid.toString, handler)
+    send("%02x %02x".format(pid.mode.id, pid.pid), handler)
   }
 
   def send(command:Command, handler: Traversable[String] => Unit) : Future[Any] = {
@@ -40,7 +40,7 @@ class ELM3xx(val port : SerialPort) extends Logging {
     val future = (serialActor ask (message)).mapTo[Traversable[String]]
     future map { result => handler(result) }
   }
-
+       //41 00 BE 3E B8 11
   def handleInit(response : Traversable[String]) {
     val regex = new Regex("(ELM\\d*) *(v\\d\\.\\d)")
     val version = response.map(s => regex.findFirstMatchIn(s)).find(m => m.nonEmpty && m.get.matched != None).flatten
